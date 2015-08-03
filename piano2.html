@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+#info {
+    position: absolute;
+    top: 30px;
+    width: 100%;
+    padding: 10px;
+    text-align: center;
+    color: #ffff00
+}
+body {
+    overflow: hidden;
+}
+</style>
+</head>
+
+<body> 
+<h1 id='info'> Touch Piano </h1>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script>
+//
+// piano reference: http://codepen.io/noogn/pen/LAiDz
+//
+// problem:
+// irregularities of black keys
+//
+
+var camera, scene, renderer, light;
+var keyboard_set;
+var raycaster, mouse = new THREE.Vector2();
+var pickables = [];
+
+
+//////////////////////////////////////////////////////////////
+var keyNames = ['c4','d4','e4','f4','g4','a4','b4','c5'];
+var noteTable = [
+    {name: 'c4', frequency: 261.63},
+    {name: 'd4', frequency: 293.7},
+    {name: 'e4', frequency: 329.63},
+    {name: 'f4', frequency: 349.2},
+    {name: 'g4', frequency: 392},
+    {name: 'a4', frequency: 440},
+    {name: 'b4', frequency: 493.9},
+    {name: 'c5', frequency: 523.3},
+];
+var keys = []; 
+var sounds = [];
+var thiskey = null;
+
+var touchKeys = [];
+
+var ac = new (window.AudioContext || window.webkitAudioContext);
+/////////////////////////////////////////////////////////////
+initWebAudio();  // set up sounds first
+init();
+animate();
+
+////////////////////////////////////////////////////////////
+function Sound (frequency, type) {
+	this.frequency = frequency;
+	this.type = type || 'triangle';
+};
+
+Sound.prototype.noteOn = function() {
+    this.osc = ac.createOscillator();
+    this.osc.connect(ac.destination);
+	this.osc.frequency.value = this.frequency;
+	this.osc.type = this.type;
+	this.osc.start(0);
+};
+Sound.prototype.noteOff = function() {
+    this.osc.stop(0);
+};
+
+/////////////////////////////////////////////////////////////////
+
+function initWebAudio () {
+    for (var i = 0; i < noteTable.length; i++) {
+        var ss = new Sound (noteTable[i].frequency);
+        ss.name = noteTable[i].name;
+        sounds.push (ss);
+    }
+}
+
+function FindSound (name) {
+    for (var i = 0; i < sounds.length; i++) {
+        if (sounds[i].name === name)
+            return sounds[i];
+    }
+    return null;
+}
+
+function Key(name, obj3d) {
+    this.name = name;
+    this.obj3d = obj3d;  // for rotation
+    this.pressed = false;
+    this.sound = FindSound (name);
+}
+
+function FindKey (name) {
+    for (var i = 0; i < keys.length; i++) {
+        if (keys[i].name === name)
+            return keys[i];
+    }
+    return null;
+}
+
+////////////////////////////////////////////////////////////////
+function init() {
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.set(10, 15,40); 
+    camera.lookAt (new THREE.Vector3(10,0,0));
+    
+    scene.add(camera);
+    light = new THREE.PointLight(0xffffff);
+    light.position.set(10, 30, 20);
+    scene.add(light);
+
+    var gridXZ = new THREE.GridHelper(50, 10);
+    gridXZ.setColors(new THREE.Color(0xff0000), new THREE.Color(0xffffff));
+    scene.add(gridXZ);
+
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x888888);
+
+    document.body.appendChild(renderer.domElement);
+    window.addEventListener('resize', onWindowResize, false);
+
+    raycaster = new THREE.Raycaster();
+    document.addEventListener('mousedown', onDocumentMouseDown, false);
+    document.addEventListener('mousemove', onDocumentMouseMove, false);
+    document.addEventListener('mouseup', onDocumentMouseUp, false);
+	
+	document.addEventListener('touchstart', onDocumentTouchStart, false);
+	document.addEventListener('touchend', onDocumentTouchEnd, false);
+    document.addEventListener('touchmove', onDocumentTouchMove, false);
+    ///////////////////////////////////////////////////////////////////////////
+    keyboard_set = new THREE.Object3D(); // the complete set
+    scene.add(keyboard_set);
+
+    var geometry = new THREE.BoxGeometry(2.5, 1.5, 9);
+    var material = new THREE.MeshLambertMaterial();
+
+    for (var kk = 0; kk < keyNames.length; kk++) {
+        var prim = new THREE.Mesh (geometry,material);
+        prim.name = keyNames[kk];
+        pickables.push (prim); // only mesh is pickable
+        prim.position.set(1.25 + kk*(2.5 + 0.05), -0.75, 4.5);
+        var keybody = new THREE.Object3D();
+        keybody.add (prim);
+        keyboard_set.add (keybody);
+        var newkey = new Key (keyNames[kk], keybody);    
+        keys.push (newkey);
+    }
+}
+/// TESTING ///////////////////////////////////////////////////////////////
+/*function onDocumentTouchStart(event) {
+	event.preventDefault(); // what is this?
+	
+	var touches = event.changedTouches;
+	for (var i = 0; i < touches.length; i++) {0
+		console.log ('start: ' + touches[i].identifier + ': ' + touches[i].pageX + ', ' + touches[i].pageY);
+	}
+}
+
+function onDocumentTouchMove(event) {
+	event.preventDefault();
+	var touches = event.changedTouches;
+	for (var i = 0; i < touches.length; i++) {
+		console.log ('move: '+ touches[i].identifier);
+	}
+}
+
+function onDocumentTouchEnd(event) {
+	event.preventDefault();
+	var touches = event.changedTouches;
+	for (var i = 0; i < touches.length; i++) {
+		console.log ('end: ' + touches[i].identifier);
+	}
+}
+*/
+///////////////////////////////////////////////////////////////////////////////////////
+
+function onDocumentTouchStart(event) {
+	event.preventDefault(); // what is this?
+	
+	var touches = event.changedTouches;
+	for (var i = 0; i < touches.length; i++) {0
+		console.log ('start: ' + touches[i].identifier + ': ' + touches[i].pageX + ', ' + touches[i].pageY);
+
+		mouse.x = ( touches[i].pageX / window.innerWidth ) * 2 - 1;
+		mouse.y = - ( touches[i].pageY / window.innerHeight ) * 2 + 1;
+		var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
+		raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+		var intersects = raycaster.intersectObjects( pickables );
+		if (intersects.length > 0) {
+			thiskey = FindKey (intersects[0].object.name);
+			thiskey.obj3d.rotation.x = 0.15;
+			thiskey.sound.noteOn();
+			
+			touchKeys.push ({touch:touches[i].identifier, key: thiskey});
+			// thiskey.pressed not yet set
+		}
+	}
+}
+
+function onDocumentTouchMove(event) {
+	event.preventDefault();
+	var touches = event.changedTouches;
+	for (var i = 0; i < touches.length; i++) {
+		console.log ('move: '+ touches[i].identifier);
+
+		mouse.x = ( touches[i].pageX / window.innerWidth ) * 2 - 1;
+		mouse.y = - ( touches[i].pageY / window.innerHeight ) * 2 + 1;
+		var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
+		raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+		var intersects = raycaster.intersectObjects( pickables );
+		if (intersects.length > 0) {
+			thiskey = FindKey (intersects[0].object.name);
+
+			// search current touchKey array
+			for (var ii = 0; ii < touchKeys.length; ii++) {
+				if (touchKeys[ii].touch == touches[i].identifier) {
+					if (touchKeys[ii].key === thiskey) break;
+					
+					touchKeys[ii].key.obj3d.rotation.x = 0;
+					touchKeys[ii].key.sound.noteOff();
+					thiskey.obj3d.rotation.x = 0.15;
+					thiskey.sound.noteOn();
+					touchKeys.splice (ii, 1, {touch:touches[i].identifier, key: thiskey});
+					break;
+				}
+			}
+		}
+		// thiskey.pressed not yet set
+		
+	}
+}
+
+function onDocumentTouchEnd(event) {
+	event.preventDefault();
+	var touches = event.changedTouches;
+	for (var i = 0; i < touches.length; i++) {
+		console.log ('end: ' + touches[i].identifier);
+		
+		for (var ii = 0; ii < touchKeys.length; ii++) {
+			if (touchKeys[ii].touch == touches[i].identifier) {
+				touchKeys[ii].key.obj3d.rotation.x = 0;
+				touchKeys[ii].key.sound.noteOff();
+				touchKeys.splice (ii, 1);
+				break;
+			}
+		}
+	}
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function onDocumentMouseDown(event) {
+
+    // PICKING DETAILS: 
+    // convert mouse.xy = [-1,1]^2 (NDC)
+    // unproject (mouse.xy, 1) to a point on the far plane (in world coordinate)
+    // set raycaster (origin, direction)
+    // find intersection objects, (closest first) 
+    // each record as
+    // [ { distance, point, face, faceIndex, object }, ... ]
+
+    event.preventDefault();
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    // find intersections
+    var vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera);
+    raycaster.set(camera.position, vector.sub(camera.position).normalize());
+    var intersects = raycaster.intersectObjects(pickables);
+    if (intersects.length > 0) {
+        thiskey = FindKey (intersects[0].object.name);
+        thiskey.obj3d.rotation.x = 0.15;
+        thiskey.sound.noteOn();
+		// thiskey.pressed not yet set
+    }
+
+}
+
+
+// for showing different cursor; 
+// no other function
+function onDocumentMouseMove(event) {
+    event.preventDefault();
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    
+    var vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera);
+    raycaster.set(camera.position, vector.sub(camera.position).normalize());
+    var intersects = raycaster.intersectObjects(pickables);
+
+    if (intersects.length > 0) {
+        document.body.style.cursor = 'pointer';
+    } else {
+        document.body.style.cursor = 'auto';
+    }
+}
+
+function onDocumentMouseUp(event) {
+    event.preventDefault();
+	// assumption: only one key down
+    thiskey.sound.noteOff();
+    thiskey.obj3d.rotation.x = 0;
+}
+
+
+function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+}
+
+</script>
+</body>
+
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+div {
+    margin: 15px;
+}
+.mybutton {
+    margin: 10px;
+    background-color: white;
+    display: block;
+}
+
+</style>
+</head>
+
+<body> 
+<div>
+    <button id='metronome' class='mybutton'>metronome</button>
+    <button id='kick' class='mybutton'>kick</button>
+    <button id='record' class='mybutton'>record</button>
+    <button id='clear' class='mybutton'>clear</button>
+</div>
+<div>Set bpm
+    <input id='bpm' value=120 style='width:6em'></input>
+</div>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src='https://jyunming-chen.github.io/WebAudio/js/shared.js'></script>
+
+<script>
+function playSound2(buffer, time, intensity) {
+    var gainNode = context.createGain();
+    var source = context.createBufferSource();
+    source.buffer = buffer;
+
+    // Connect source to a gain node
+    source.connect(gainNode);
+    // Connect gain node to destination
+    gainNode.connect(context.destination);
+
+    var gainval = intensity || 0.15;
+    gainNode.gain.value = gainval;
+
+    source[source.start ? 'start' : 'noteOn'](time);
+    
+    /////////////////////////////////
+    // source.start (when, in seconds) 
+    // The 'when' parameter defines when the play will start. 
+    // If when represents a time in the past, the play will start immediately.
+    // https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/start
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+var RhythmSample = function () {
+    loadSounds(this, {
+        click: 'https://jyunming-chen.github.io/WebAudio/metronome_click.wav',
+        ding: 'https://jyunming-chen.github.io/WebAudio/ding.wav',
+        dingding: 'https://jyunming-chen.github.io/WebAudio/dingding.wav',
+        kick: 'https://jyunming-chen.github.io/WebAudio/kick.wav',
+        snare: 'https://jyunming-chen.github.io/WebAudio/snare.wav',
+        hihat: 'https://jyunming-chen.github.io/WebAudio/hihat.wav'
+    });
+};
+
+// play score, exactly ONCE (has 'barsInScore' bars)
+RhythmSample.prototype.playSequence = function (score) {
+    var startTime = context.currentTime;  // in seconds, from webaudio
+    var eighthNoteTime = 60/tempo/2;  // seconds
+
+    for (var ii = 0; ii < score.length; ii++) {
+        if (score[ii].instrument == 'k') 
+            playSound2(this.kick, startTime + score[ii].time * eighthNoteTime, score[ii].intensity);
+        if (score[ii].instrument == 's') 
+            playSound2(this.snare, startTime + score[ii].time * eighthNoteTime, score[ii].intensity);
+        if (score[ii].instrument == 'h') 
+            playSound2(this.hihat, startTime + score[ii].time * eighthNoteTime, score[ii].intensity);
+    }
+
+}
+
+///////// PLAY LOOP //////////////////////////////////////////////
+$('#play').click(function () {
+    // not used in this fiddle
+    loopOn = !loopOn;
+    if (loopOn) playScore();
+});
+
+// triggered by start of metronome
+function playScore () {
+    sample.playSequence(score);
+    if (loopOn) {
+        setTimeout (function() {
+            playScore();
+        }, quarterNoteTime*4*barsInScore*1000);
+    }
+}
+
+
+
+///////  METRONOME ///////////////////////////////////////////////
+$('#metronome').click(function () {
+    metronomeOn = !metronomeOn;
+    if (metronomeOn) {
+        playMetronome();
+        $(this).css('background-color','yellow');
+    } else 
+        $(this).css('background-color','white');
+        
+    loopOn = metronomeOn;  // two bound together
+    if (loopOn) 
+        playScore();
+});
+
+function playMetronome() {
+    this.count = this.count == undefined? 0 : this.count+1;
+    if (this.count % (4*barsInScore) == 0) {  // start of score
+        playSound2 (sample.dingding,0,1);
+        if (recordOn && scoreStartTime == null)  // ready to start recording
+           scoreStartTime = context.currentTime;
+    } else {
+        if (this.count % 4 == 0) {  // start of bar
+            playSound2 (sample.ding, 0, 1);
+        }
+    }
+
+    // play at every beat
+    playSound2(sample.click, 0, .5);  // time = 0: start immediately
+    
+    if (metronomeOn) {
+        setTimeout(function () {
+            playMetronome();
+        }, quarterNoteTime*1000);
+//        console.log ('events: ' + score.length);
+        for (var i = 0; i < score.length; i++)
+            console.log (score[i]);
+    }
+}
+
+
+
+/////////  KICK //////////////////////////////////////////////
+$('#kick').click(function() {
+    kick();
+});
+
+function kick () {
+    playSound2(sample.kick, 0, 1);  // time = 0: start immediately
+
+    if (recordOn) {  // in recording ...
+        // quantize (not yet)
+        var now = context.currentTime;
+        
+        var realElapsedTime = now - scoreStartTime;
+        // looping: 
+        // eventTime: in number of eighthNotes from start
+        // can be [0,..., 8,...., 16,...., 24,....,32,....36)
+        // (for our 5-bar score)
+        var barTime = 4*quarterNoteTime;
+        var scoreTime = barsInScore * barTime; 
+        var loopTime = realElapsedTime % scoreTime; // [0, scoreTime)
+        var whichBar = Math.floor (loopTime/barTime); // [0,..., barsInScore-1]
+        var eventFraction = loopTime % barTime / barTime; // [0,1)
+        var eventTime = quantize (whichBar+eventFraction, 8);
+        var event = {time: 8*eventTime, instrument: 'k', intensity: 1.0};
+        score.push (event);
+    }
+}
+function quantize (the_number,base) {  // 3.55, 8
+    var whole = Math.floor (the_number);  // 3
+    var fraction = the_number - whole;    // 0.55
+    return (whole + quantizeFraction(fraction,base));
+}
+
+function quantizeFraction (number, base) {
+    // number = c1*base^-1 + c2*base^-2 + ....
+
+    // number*base = c1*base^0 + c2*base^-1 + ...
+    var intPart = Math.floor (number * base); // c1
+    var fraction = number - intPart/base; // c2*base^-2 + ... 
+    
+    // 0.c1 or 0.(c1+1)?
+    // fraction*base = c2*base^-1 + ...
+    // fraction*base*base = c2*base^0 + ....
+    // if (c2 >= base/2) 0.(c1+1)
+    // else              0.(c1)
+    if (Math.floor(fraction * base * base) >= base/2)
+        intPart += 1;
+    return (intPart/base);
+}
+
+//////////  RECORD ///////////////////////
+$('#record').click(function() {
+    recordOn = !recordOn;
+    if (recordOn) {
+        scoreStartTime = null;
+//        scoreStartTime = context.currentTime;
+        $(this).css('background-color','red');
+    } else {
+        $(this).css('background-color','white');
+    }
+});
+
+///////////  CLEAR ////////////////////////
+$('#clear').click(function() {
+    score = [];
+});
+
+/////////  SET BPM ////////////////////////////////////
+$('#bpm').on('keyup', function (e) {
+    if (e.keyCode === 13) {
+        tempo = $('#bpm').val();
+        quarterNoteTime = 60 / tempo;
+    }
+});
+
+
+////////////////////////////////////////////////////////////////////////
+var sample = new RhythmSample();
+
+// initial setting;
+var tempo = 120;
+var quarterNoteTime = 60 / tempo;  // seconds
+var metronomeOn = false;
+var loopOn = false;
+var scoreStartTime = null;
+var recordOn = false;
+
+// most samples contain 5 basrs
+var barsInScore = 2;
+
+// scores
+// {time: (number of eighthNote) from start,
+// instrument: 'k', 'h', 's'
+// intensity: [0,1]
+// }
+
+var score = [
+    {time:6, instrument:'k'}
+];
+
+
+
+
+</script>
+</body>
+
+</html>

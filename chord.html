@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+
+
+</style>
+</head>
+
+<body> 
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<button id='noteon' style='margin:10px'> Note On </button>
+<button id='noteoff' style='margin:10px'> Note Off </button>
+<p id='hint'></p>
+<script>
+var noteTable = [
+    {note: 'c4', frequency: 261.63},
+    {note: 'e4', frequency: 329.63}
+];
+
+/////////////////////////////////////////////////////////////////////
+var ac = new (window.AudioContext || window.webkitAudioContext);
+
+function Sound (frequency, type) {
+    this.osc = ac.createOscillator();
+    
+    if (typeof frequency != 'undefined') {
+        this.osc.frequency.value = frequency; 
+    }
+        
+    this.osc.type = type || 'triangle';
+    this.osc.start(0);
+//    this.osc.connect(ac.destination);
+};
+Sound.prototype.noteOn = function() {
+    this.osc.connect(ac.destination);
+};
+Sound.prototype.noteOff = function() {
+    this.osc.disconnect();
+};
+
+var sounds = [];
+for (var i = 0; i < noteTable.length; i++) {
+    var ss = new Sound (noteTable[i].frequency);
+    sounds.push (ss);
+}
+
+$('#noteon').click( function() {
+    sounds[0].noteOn ();
+    sounds[1].noteOn ();
+	$('#hint').text('chord ON!');
+});
+$('#noteoff').click( function() {
+    sounds[0].noteOff ();
+    sounds[1].noteOff ();
+	$('#hint').text('chord off!');
+});    
+
+//////////////////////////////////////////////
+// problem: cannot play twice
+// http://stackoverflow.com/questions/9439585/play-an-audiobuffersourcenode-twice
+// http://stackoverflow.com/questions/15261030/web-audio-start-and-stop-oscillator-then-start-it-again
+
+
+
+</script>
+</body>
+
+</html>

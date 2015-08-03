@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+
+
+</style>
+</head>
+
+<body> 
+<script src='https://jyunming-chen.github.io/WebAudio/js/shared.js'></script>
+<p><button onclick="sample.toggle()">Play/pause</button></p>
+<script>
+/////////////////////////////////////////////////////////////
+// play by creating an oscillator, connect and start it
+// stop by stopping it
+// works for both platform
+// but need more work on API (setting frequencies, type, ...)
+/////////////////////////////////////////////////////////////
+
+function OscillatorSample() {
+  this.isPlaying = false;
+//  this.canvas = document.querySelector('canvas');
+//  this.WIDTH = 640;
+}
+//  this.HEIGHT = 240;
+
+OscillatorSample.prototype.play = function() {
+  this.oscillator = context.createOscillator();
+ /* 
+  this.analyser = context.createAnalyser();
+
+  // Setup the graph.
+  this.oscillator.connect(this.analyser);
+  this.analyser.connect(context.destination);
+*/
+  this.oscillator.connect (context.destination);
+	
+  //this.oscillator[this.oscillator.start ? 'start' : 'noteOn'](0);
+this.oscillator.start(0);
+  //requestAnimFrame(this.visualize.bind(this));
+};
+
+OscillatorSample.prototype.stop = function() {
+  this.oscillator.stop(0);
+};
+
+OscillatorSample.prototype.toggle = function() {
+  (this.isPlaying ? this.stop() : this.play());
+  this.isPlaying = !this.isPlaying;
+
+};
+
+OscillatorSample.prototype.changeFrequency = function(val) {
+debugger;
+  this.oscillator.frequency.value = val;
+};
+
+OscillatorSample.prototype.changeDetune = function(val) {
+  this.oscillator.detune.value = val;
+};
+
+OscillatorSample.prototype.changeType = function(type) {
+  this.oscillator.type = type;
+};
+
+var sample = new OscillatorSample();
+sample.play();
+sample.changeFrequency (261.6);
+
+//sample.oscillator.start(0);
+//sample.oscillator.stop(1);
+//sample.toggle();
+
+</script>
+
+</body>
+
+</html>

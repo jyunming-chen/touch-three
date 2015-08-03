@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+
+
+</style>
+</head>
+
+<body> 
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src='https://jyunming-chen.github.io/WebAudio/js/shared.js'></script>
+<p><button onclick="sample.toggle()">Play/pause</button></p>
+<p id='hint'></p>
+<script>
+///////////////////////////////////////////
+/// connect/disconnect to start/stop
+//  does not work on iPAD
+//////////////////////////////////////////
+function OscillatorSample() {
+  this.isPlaying = false;
+//  this.canvas = document.querySelector('canvas');
+//  this.WIDTH = 640;
+}
+//  this.HEIGHT = 240;
+
+OscillatorSample.prototype.init = function() {
+  this.oscillator = context.createOscillator();
+ /* 
+  this.analyser = context.createAnalyser();
+
+  // Setup the graph.
+  this.oscillator.connect(this.analyser);
+  this.analyser.connect(context.destination);
+*/
+this.oscillator.start(0);
+}
+
+OscillatorSample.prototype.play = function () {	
+console.log ('play');
+  this.oscillator.connect (context.destination);
+};
+
+OscillatorSample.prototype.stop = function() {
+  console.log ('stop');
+  this.oscillator.disconnect();
+};
+
+OscillatorSample.prototype.toggle = function() {
+  (this.isPlaying ? this.stop() : this.play());
+  this.isPlaying = !this.isPlaying;
+  
+  if (this.isPlaying) {
+	$('#hint').text ('play');
+} else {
+	$('#hint').text ('stop');
+}
+
+};
+
+OscillatorSample.prototype.changeFrequency = function(val) {
+  this.oscillator.frequency.value = val;
+};
+
+OscillatorSample.prototype.changeDetune = function(val) {
+  this.oscillator.detune.value = val;
+};
+
+OscillatorSample.prototype.changeType = function(type) {
+  this.oscillator.type = type;
+};
+
+var sample = new OscillatorSample();
+sample.init();
+sample.changeFrequency (261.6);
+
+//sample.oscillator.start(0);
+//sample.oscillator.stop(1);
+//sample.toggle();
+
+</script>
+
+</body>
+
+</html>
