@@ -147,6 +147,8 @@ function playMetronome(reset) {
 			   scoreStartTime = context.currentTime;
 			   console.log ('score started...');
 			}
+			if (loopOn)
+				playScore();
 		} else {
 			if (this.count % 4 == 0) {  // start of bar
 				playSound2 (sample.ding, 0, 1);
@@ -168,11 +170,13 @@ function playMetronome(reset) {
 // triggered by start of metronome
 function playScore () {
     sample.playSequence(score);
-    if (loopOn) {
+/*
+ if (loopOn) {
         setTimeout (function() {
             playScore();
         }, quarterNoteTime*4*barsInScore*1000);
     }
+	*/
 }
 
 function createButton (name, image) {
@@ -444,7 +448,7 @@ function onDocumentMouseDown( event ) {
 			metronomeOn = !metronomeOn;
 			loopOn = metronomeOn;
 			if (metronomeOn) {
-				playMetronome(true); playScore();
+				playMetronome(true); //playScore();
 			} else { // metronome off
 				scoreStartTime = null;
 			}
@@ -510,7 +514,7 @@ function onDocumentTouchStart(event) {
 			metronomeOn = !metronomeOn;
 			loopOn = metronomeOn;
 			if (metronomeOn) {
-				playMetronome(true); playScore();
+				playMetronome(true); //playScore();
 			} else { // metronome off
 				scoreStartTime = null;
 			}
