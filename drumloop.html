@@ -460,7 +460,23 @@ function onDocumentMouseDown( event ) {
 
 function myFunction() {
     var x;
-	var msg = 'To Do:\niPhone同步問題: sound lagging motion\ntake-based editing';
+	var msg = 
+'INSTRUCTIONS:\n\
+1. Punch metronome & record to start\n\
+2. two bars count in; loop recording starts as sweeper moves\n\
+3. Press trash to erase.\n\
+4. Quantization mode: eighth, sixteenth, none.\n\n\
+PROBLEM:\n\
+serious iPhone syncing problem\n\
+use metronome to set beatMark & beatTime;\n\
+fixed sweep syncing problem;\n\
+but playScore lag still exist,\n\
+especially at second bar\n\
+\nTO-DO\'s:\n\
+1. take-based delete (only delete the last take),\n\
+or event-based deletion (pick to delete)\n\
+2. BPM adjustment (now set at 120)';
+
 	
     if (confirm(msg) == true) {
         x = "You pressed OK!";
