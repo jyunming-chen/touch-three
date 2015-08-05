@@ -496,10 +496,15 @@ function animate() {
         var scoreTime = barsInScore * barTime; 
 		var realElapsedTime = context.currentTime - scoreStartTime;
         var loopTime = realElapsedTime % scoreTime; // [0, scoreTime)
-		var ratio = loopTime / scoreTime; // [0,1]
+		
+		var errTime = 0;
+		var ratio = (loopTime-errTime) / scoreTime; // [0,1]
 		var xx = -100 + ratio*200;
 		if (headSync) {
 			console.log ('syncing...');
+			console.log (' ratio was: ' + ratio);
+			errTime = (ratio - 0)*scoreTime; // sec
+			
 			xx = -100;  // syncing...
 			headSync = false;
 		}
