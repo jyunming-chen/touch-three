@@ -19,14 +19,14 @@ body {
 </head>
 
 <body> 
-<div id="info">Drum Kit Looping</div>
+<!--div id="info">Drum Kit Looping</div-->
 <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
 <script src='https://jyunming-chen.github.io/WebAudio/js/shared.js'></script>
 
 <script>
 var camera, scene, renderer, geometry, material, controls;
 var clock = new THREE.Clock();
-var bass, snare, hihat, record, metronome, erase;
+var bassMesh, snareMesh, hihatMesh, recordMesh, metronomeMesh, eraseMesh, infoMesh;
 var sweepLine;
 var tempo = 120;
 var sweepVel = 100 / (60/tempo * 4);
@@ -188,44 +188,53 @@ function init() {
     scene.add(camera);
 
     THREE.ImageUtils.crossOrigin = '';
-    bass = createButton ('bass', 'http://i.imgur.com/shUTQ9x.png');
-	bass.material.transparent=true;
-	bass.position.set (-50,70,5);
+    
+    var texture = THREE.ImageUtils.loadTexture('http://i.imgur.com/w8265dV.png');
+    var geometry = new THREE.PlaneGeometry(20, 20);
+    var material = new THREE.MeshBasicMaterial({map: texture, transparent:true});
+    var infoMesh = new THREE.Mesh(geometry, material);
+	infoMesh.name = 'info';
+	infoMesh.position.set (100,100,5);
+	scene.add (infoMesh);
 	
-    snare = createButton ('snare','http://i.imgur.com/EXojtJr.png');
-    snare.material.transparent=true;
-	snare.position.set (0,70,5);
+	bassMesh = createButton ('bass', 'http://i.imgur.com/shUTQ9x.png');
+	bassMesh.material.transparent=true;
+	bassMesh.position.set (-50,70,5);
+	
+    snareMesh = createButton ('snare','http://i.imgur.com/EXojtJr.png');
+    snareMesh.material.transparent=true;
+	snareMesh.position.set (0,70,5);
 
-	hihat = createButton ('hihat','http://i.imgur.com/TZOKgMJ.png');
-    hihat.material.transparent=true;
-	hihat.position.set (50,70,5);
+	hihatMesh = createButton ('hihat','http://i.imgur.com/TZOKgMJ.png');
+    hihatMesh.material.transparent=true;
+	hihatMesh.position.set (50,70,5);
 
-	record = createButton ('record', 'http://i.imgur.com/Gu1CEHZ.png');
-	record.material.transparent=true;
-    record.position.set (-80,-60,5);
+	recordMesh = createButton ('record', 'http://i.imgur.com/Gu1CEHZ.png');
+	recordMesh.material.transparent=true;
+    recordMesh.position.set (-80,-60,5);
 	recordOnSign = onSign.clone();
-	recordOnSign.position.copy (record.position);
+	recordOnSign.position.copy (recordMesh.position);
 	scene.add (recordOnSign);
 	
-	erase = createButton ('erase', 'http://i.imgur.com/2YVCwkK.png');
-	erase.material.transparent=true;
-    erase.position.set (80,-60,5);
+	eraseMesh = createButton ('erase', 'http://i.imgur.com/2YVCwkK.png');
+	eraseMesh.material.transparent=true;
+    eraseMesh.position.set (80,-60,5);
 
-	metronome = createButton ('metronome', 'http://i.imgur.com/zZdSFN6.jpg');
-    metronome.position.set (-30,-60,5);
+	metronomeMesh = createButton ('metronome', 'http://i.imgur.com/zZdSFN6.jpg');
+    metronomeMesh.position.set (-30,-60,5);
 	metronomeOnSign = onSign.clone();
-	metronomeOnSign.position.copy (metronome.position);
+	metronomeOnSign.position.copy (metronomeMesh.position);
 	scene.add (metronomeOnSign);
 	
-	quantize = createButton ('quantize', 'http://i.imgur.com/xpurxmq.jpg');
+	quantizeMesh = createButton ('quantize', 'http://i.imgur.com/xpurxmq.jpg');
 	eighthTex = THREE.ImageUtils.loadTexture ('http://i.imgur.com/xpurxmq.jpg');
 	sixteenthTex = THREE.ImageUtils.loadTexture('http://i.imgur.com/sOKfaMW.jpg');
-    quantize.position.set (30,-60,5);
+    quantizeMesh.position.set (30,-60,5);
 	quantizeOnSign = onSign.clone();
-	quantizeOnSign.position.copy (quantize.position);
+	quantizeOnSign.position.copy (quantizeMesh.position);
 	scene.add (quantizeOnSign);
 
-	pickables.push (bass, snare, hihat, record, erase, metronome, quantize);
+	pickables.push (bassMesh, snareMesh, hihatMesh, recordMesh, eraseMesh, metronomeMesh, quantizeMesh, infoMesh);
 	
     geometry = new THREE.PlaneGeometry(200, 30);
     material = new THREE.MeshBasicMaterial({color:0xffffff});
@@ -319,7 +328,7 @@ function kick () {
 	}
 }
 
-function Hsnare() {
+function snare() {
 //console.log ('in snare()');
     playSound2(sample.snare, 0, 1);  // time = 0: start immediately
 
@@ -336,7 +345,7 @@ function Hsnare() {
 	}
 }
 
-function Hhihat() {
+function hihat() {
 //console.log ('in hihat()');
     playSound2(sample.hihat, 0, 1);  // time = 0: start immediately
 
@@ -391,10 +400,10 @@ function onDocumentMouseDown( event ) {
 			kick();
 		} else if (intersects[0].object.name === "snare") {
 			console.log ('strike snare');
-			Hsnare();
+			snare();
 		} else if (intersects[0].object.name === "hihat") {
 			console.log ('strike hihet');
-			Hhihat();
+			hihat();
 		} else if (intersects[0].object.name === "record") {
 			console.log ('toggle record');
 			recordOn = ! recordOn;
@@ -404,13 +413,12 @@ function onDocumentMouseDown( event ) {
 			console.log ('toggle quantize');
 			quantizeMode = (quantizeMode+1)%3;
 			if (quantizeMode == 2) {
-				quantize.material.map = sixteenthTex;
+				quantizeMesh.material.map = sixteenthTex;
 			} else  if (quantizeMode == 1) {
-				quantize.material.map = eighthTex;
+				quantizeMesh.material.map = eighthTex;
 			}
 		} else if (intersects[0].object.name === 'erase') {
 			scene.remove (eventMarks); // necessary!!
-//			console.log ('erase...');
 			eventMarks = new THREE.Object3D();
 			scene.add (eventMarks);
 			score=[];
@@ -422,9 +430,23 @@ function onDocumentMouseDown( event ) {
 			} else { // metronome off
 				scoreStartTime = null;
 			}
+		} else if (intersects[0].object.name === 'info') {
+			myFunction();
 		}
 	}
 }
+
+function myFunction() {
+    var x;
+	var msg = 'To Do:\niPhone同步問題: sound lagging motion\ntake-based editing';
+	
+    if (confirm(msg) == true) {
+        x = "You pressed OK!";
+    } else {
+        x = "You pressed Cancel!";
+    }
+//    document.getElementById("demo").innerHTML = x;
+}	
 
 function onDocumentTouchStart(event) {
 	event.preventDefault(); // what is this?
@@ -445,10 +467,10 @@ function onDocumentTouchStart(event) {
 			kick();
 		} else if (intersects[0].object.name === "snare") {
 			console.log ('strike snare');
-			Hsnare();
+			snare();
 		} else if (intersects[0].object.name === "hihat") {
 			console.log ('strike hihet');
-			Hhihat();
+			hihat();
 		} else if (intersects[0].object.name === "record") {
 			console.log ('toggle record');
 			recordOn = ! recordOn;
@@ -491,19 +513,22 @@ function onDocumentTouchStart(event) {
 }
 
 function animate() {
+	this.errTime = this.errTime || 0;//? 0: this.errTime;
+	
 	if (scoreStartTime != null) {
 	   var barTime = 4*quarterNoteTime;
         var scoreTime = barsInScore * barTime; 
 		var realElapsedTime = context.currentTime - scoreStartTime;
         var loopTime = realElapsedTime % scoreTime; // [0, scoreTime)
 		
-		var errTime = 0;
-		var ratio = (loopTime-errTime) / scoreTime; // [0,1]
+	//	var ratio = (loopTime - this.errTime) / scoreTime; // [0,1]
+		var ratio = (loopTime ) / scoreTime; // [0,1]
+		//console.log ('errTime: ' + this.errTime);
 		var xx = -100 + ratio*200;
 		if (headSync) {
 			console.log ('syncing...');
 			console.log (' ratio was: ' + ratio);
-			errTime = (ratio - 0)*scoreTime; // sec
+			this.errTime = (ratio - 0)*scoreTime; // sec
 			
 			xx = -100;  // syncing...
 			headSync = false;
