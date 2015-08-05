@@ -53,6 +53,7 @@ var metronomeOnSign, recordOnSign, quantizeOnSign;
 var quantizeMode; // 0: none, 1: eighth, 2: sixteenth
 var sixteenthTex, eighthTex;
 var headSync = false;
+var beatMark = 0;
 
 var kickMark = new THREE.Mesh( new THREE.CircleGeometry( 3,32 ), 
 						new THREE.MeshBasicMaterial({color:0x0000ff}));
@@ -128,6 +129,7 @@ function playSound2(buffer, time, intensity) {
     // https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode/start
 }
 
+// setting beatMark;
 
 function playMetronome(reset) {
 	this.count = this.count == undefined? 0 : this.count+1;
@@ -140,6 +142,7 @@ function playMetronome(reset) {
 		if (this.count % (4*barsInScore) == 0) {  // start of score
 			playSound2 (sample.dingding,0,1);
 			headSync = true;
+			beatMark = 0;
 			if (recordOn && scoreStartTime == null) { // ready to start recording
 			   scoreStartTime = context.currentTime;
 			   console.log ('score started...');
@@ -150,6 +153,7 @@ function playMetronome(reset) {
 			}
 		}
 		playSound2(sample.click, 0, .5);  // time = 0: start immediately
+		++beatMark;
 	}
 	if (metronomeOn) {
 		setTimeout(function () {
@@ -513,29 +517,33 @@ function onDocumentTouchStart(event) {
 }
 
 function animate() {
-	this.errTime = this.errTime || 0;//? 0: this.errTime;
-	
+/*
 	if (scoreStartTime != null) {
 	   var barTime = 4*quarterNoteTime;
         var scoreTime = barsInScore * barTime; 
 		var realElapsedTime = context.currentTime - scoreStartTime;
         var loopTime = realElapsedTime % scoreTime; // [0, scoreTime)
 		
-	//	var ratio = (loopTime - this.errTime) / scoreTime; // [0,1]
-		var ratio = (loopTime ) / scoreTime; // [0,1]
-		//console.log ('errTime: ' + this.errTime);
+		var ratio = loopTime  / scoreTime; // [0,1]
 		var xx = -100 + ratio*200;
+		console.log ('beat: ' + beatMark);
+		
 		if (headSync) {
 			console.log ('syncing...');
 			console.log (' ratio was: ' + ratio);
-			this.errTime = (ratio - 0)*scoreTime; // sec
-			
 			xx = -100;  // syncing...
 			headSync = false;
 		}
 		sweepLine.position.set (xx, 0, 1);
     }
-
+*/
+	if (scoreStartTime != null) {
+	// beatMark based animation
+		var dx = 200/(barsInScore * 4);
+		var xx = -100 + (beatMark -1)*dx;
+		sweepLine.position.set (xx, 0, 1);
+	}
+	
 	if (recordOn) 
 		recordOnSign.visible = true;
 	else
