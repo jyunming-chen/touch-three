@@ -10,7 +10,8 @@
 </head>
 
 <body> 
-<h1 style="text-align:center"> Draw ONE Line </h1>
+<h1 style="text-align:center"> Draw ONE Line: Mouse or TOUCH
+</h1>
 
 <hr>
 <div id="canvas" style="float:left; margin:3px; width:60vw; height:60vw"></div>
@@ -36,8 +37,8 @@ var mouseDown = false;
 init();
 animate();
 
-function init()
-{
+function init() {
+
 	renderer = new THREE.WebGLRenderer({antialias: true});
 	renderer.setSize (width, height);
 	renderer.setClearColor (0xeeeeee);
@@ -54,18 +55,13 @@ function init()
 
 	var gridXZ = new THREE.GridHelper(10, 1);
 	gridXZ.setColors( new THREE.Color(0xff0000), new THREE.Color(0x999999) );
-	//gridXZ.material = new THREE.LineDashedMaterial( { color: 0x00cc00, dashSize: 1, gapSize: 1 } );
 	gridXZ.rotation.x = Math.PI/2;
 	scene.add(gridXZ);
 	
 	// Event listeners
 	// ref: https://api.jquery.com/category/events/
 	window.addEventListener ('resize', onWindowResize, false);	
-/*	
-	window.addEventListener( 'mousemove', onDocumentMouseMove, false );
-	window.addEventListener( 'mouseup', onDocumentMouseUp, false );
-	window.addEventListener( 'mousedown', onDocumentMouseDown, false );
-*/	
+
 	// three ways to associate event listener to an element
 	// 1. document.getElementById("canvas").addEventListener( 'mousedown', onDocumentMouseDown, false );
 	// 2. $("#canvas").mousedown (onDocumentMouseDown);
@@ -75,18 +71,23 @@ function init()
 	$("#canvas").mousemove (onDocumentMouseMove);
 	$("#canvas").mouseup (onDocumentMouseUp);
 
-	// for iPad, iphone, ... those with touch screen
-
+	// for those with touch screen
 	$("#canvas").on ("touchstart", onDocumentTouchStart);
 	$("#canvas").on ("touchend", onDocumentTouchEnd);
 	$("#canvas").on ("touchmove", onDocumentTouchMove);
-/*
-	document.addEventListener('touchstart', onDocumentTouchStart, false);
-	document.addEventListener('touchend', onDocumentTouchEnd, false);
-    document.addEventListener('touchmove', onDocumentTouchMove, false);
-*/
 	
 }
+
+function onWindowResize() {
+
+	width = $("#canvas").innerWidth();
+	height = $("#canvas").innerHeight();
+
+	camera.aspect = width/height;
+	camera.updateProjectionMatrix();
+	renderer.setSize (width, height);
+}
+
 
 /////////////////////////////////////////////////////////////////////////
 function onDocumentTouchStart (ev) {
@@ -143,10 +144,12 @@ var event = ev.originalEvent;  // for jQuery
 ///////////////////////////////////////////////////////////////////////////////
 
 function onDocumentMouseDown (event) {
-console.log ("in mousedown");
+
+	// each mousedown starts a new line
 	if (myLine) {
 		scene.remove (myLine);
 	}
+
 	event.preventDefault();
 	// NDC: [-1,1]x[-1,1]
 	mouse.x = ( (event.clientX - event.target.offsetLeft) / width ) * 2 - 1;
@@ -160,9 +163,11 @@ console.log ("in mousedown");
 		myLine = createNewLine (myPoint);
 		scene.add (myLine);
 	}
+
 }
 
 function onDocumentMouseUp (event) {
+
 	if (event.button === 0) {  // left button
 		event.preventDefault();
 		mouseDown = false;
@@ -171,7 +176,7 @@ function onDocumentMouseUp (event) {
 
 function onDocumentMouseMove( event ) {
 	if (mouseDown) {
-console.log ("in mousemove");
+
 		event.preventDefault();
 		// NDC: [-1,1]x[-1,1]
 		mouse.x = ( (event.clientX - event.target.offsetLeft) / width ) * 2 - 1;
@@ -184,25 +189,25 @@ console.log ("in mousemove");
 		++npoints;
 		npoints = npoints > MAX_LINE_POINTS ? MAX_LINE_POINTS : npoints;
 	}
+	
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
 $("#clear").click (function() {
-console.log ("in clear");
 	clearLine(); 
 });
 
 $("#restore").click (function() {
-console.log ("in restore");
 	var ss = localStorage.getItem ("myContour");	
 	myLine = readContour2(ss);
 });
 
 $("#save").click (function() {
-console.log ("in save");
 	var string = outputContour2();
 	localStorage.setItem ("myContour", string);
 });
+
+
 ////============================== ////
 /*
 $("#clear").on ("touchend", function() {
@@ -228,15 +233,6 @@ function animate()
 	render(); 
 }
 
-function onWindowResize()
-{
-	width = $("#canvas").innerWidth();
-	height = $("#canvas").innerHeight();
-
-	camera.aspect = width/height;
-	camera.updateProjectionMatrix();
-	renderer.setSize (width, height);
-}
 
 function render()
 {

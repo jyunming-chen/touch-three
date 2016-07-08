@@ -24,31 +24,27 @@
 
 <body> 
 <div id="info">
-webgl tutorial 19-1 <br/><br/>
-XZ Tracer (touch version)
+XZ Tracer 
+<br> Move with mouse
+<br> OR with Touch (Point, Move)
 </div>
 
-<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
-<script src="https://dl.dropboxusercontent.com/u/3587259/Code/Threejs/OrbitControls.js">   
-</script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r74/three.min.js"></script>
+
 <script>
 
 var scene, renderer, camera;
-var controls;
 var plane, cyl;
 var mouse = new THREE.Vector2();
-var mouseX, mouseY;
-var windowHalfX, windowHalfY;
+var raycaster = new THREE.Raycaster();
 
 init();
 animate();
 
-function init()
-{
+function init() {
+
 	var width = window.innerWidth;
 	var height = window.innerHeight;
-	windowHalfX = width/2;
-	windowHalfY = height/2;
 	
 	renderer = new THREE.WebGLRenderer({antialias: true});
 	renderer.setSize (width, height);
@@ -72,21 +68,18 @@ function init()
 	cyl.name = "leftB";
 	scene.add (cyl);
 
-	// add control here (after the camera is defined)
-//	controls = new THREE.OrbitControls (camera, renderer.domElement);
-	
 	var gridXZ = new THREE.GridHelper(100, 20);
 	gridXZ.setColors( new THREE.Color(0xff0000), new THREE.Color(0xffffff) );
 	gridXZ.position.set (0,0,0); 
 	scene.add(gridXZ);
 
-	// build an invisible plane, overlapping the grid
+	// build an invisible plane, overlapping thegrid
 	plane = new THREE.Mesh(
 		new THREE.PlaneBufferGeometry( 200, 200, 8, 8 ),
-		new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.25, transparent: true } )
+		new THREE.MeshBasicMaterial()
 	);
 	plane.rotation.x = -Math.PI/2;
-	plane.visible = false;   // invisible, for picking only
+	plane.material.visible = false;   // invisible, for picking only
 	scene.add( plane );
 
 	var pointLight = new THREE.PointLight (0xffffff);
@@ -97,65 +90,67 @@ function init()
 	scene.add(ambientLight);
 	
 	window.addEventListener ('resize', onWindowResize, false);	
-	window.addEventListener( 'mousemove', onDocumentMouseMove, false );
     
-	// for iPad, iphone, ... those with touch screen
+	// mousemove
+	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+	// for those with touch screen
     document.addEventListener('touchstart', onDocumentTouchStart, false);
     document.addEventListener('touchmove', onDocumentTouchStart, false);  // same callback
 }
-function onDocumentTouchStart(event) {
 
-    if (event.touches.length == 1) {
-        event.preventDefault();
-		mouse.x = ( event.touches[0].pageX / window.innerWidth ) * 2 - 1;
-		mouse.y = - ( event.touches[0].pageY / window.innerHeight ) * 2 + 1;
-	
-		var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 ).unproject( camera );
-		var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
-
-		var intersects = raycaster.intersectObject( plane );
-		if (intersects.length > 0) {
-			var move = intersects[0].point.clone();
-			cyl.position.copy (move);
-		}
-	}
+function onWindowResize()
+{
+	camera.aspect = window.innerWidth / window.innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize (window.innerWidth, window.innerHeight);
 }
 
 function onDocumentMouseMove( event ) {
+	
 	event.preventDefault();
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 	
-	var vector = new THREE.Vector3( mouse.x, mouse.y, 0.5 ).unproject( camera );
-	var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
-
+	raycaster.setFromCamera(mouse, camera);
 	var intersects = raycaster.intersectObject( plane );
+
 	if (intersects.length > 0) {
 		var move = intersects[0].point.clone();
 		cyl.position.copy (move);
 	}
 }
 
-function animate()
-{
+function onDocumentTouchStart(event) {
+
+    if (event.touches.length == 1) {
+        
+		event.preventDefault();
+		mouse.x = ( event.touches[0].pageX / window.innerWidth ) * 2 - 1;
+		mouse.y = - ( event.touches[0].pageY / window.innerHeight ) * 2 + 1;
+	
+		raycaster.setFromCamera(mouse, camera);
+
+		var intersects = raycaster.intersectObject( plane );
+		if (intersects.length > 0) {
+			var move = intersects[0].point.clone();
+			cyl.position.copy (move);
+		}
+	
+	}
+	
+}
+
+
+function animate() {
+
 	requestAnimationFrame ( animate );  
-//	controls.update();
-	render(); 
-}
-
-function onWindowResize()
-{
-	windowHalfX = window.innerWidth/2;
-	windowHalfY = window.innerHeight/2;
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-	renderer.setSize (window.innerWidth, window.innerHeight);
-}
-
-function render()
-{
 	renderer.render (scene, camera);
+
 }
+
+
+
 </script>
 </body>
 
