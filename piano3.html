@@ -22,9 +22,7 @@ body {
 <h1 id='info'> Touch Piano </h1>
 <script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.js"></script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="https://dl.dropboxusercontent.com/u/3587259/Code/Threejs/OrbitControls.js">
-    
-</script>
+
 <script>
 //
 // piano reference: http://codepen.io/noogn/pen/LAiDz
@@ -37,7 +35,6 @@ var camera, scene, renderer, light;
 var keyboard_set;
 var raycaster, mouse = new THREE.Vector2();
 var pickables = [];
-var controls;
 
 //////////////////////////////////////////////////////////////
 var keyNames = ['c4','d4','e4','f4','g4','a4','b4','c5'];
@@ -129,6 +126,7 @@ function FindKey (name) {
 
 ////////////////////////////////////////////////////////////////
 function init() {
+
     scene = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera(20, window.innerWidth / window.innerHeight, 1, 1000);
@@ -148,8 +146,6 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x888888);
 	
-  //  controls = new THREE.OrbitControls(camera, renderer.domElement);
-	
     document.body.appendChild(renderer.domElement);
     window.addEventListener('resize', onWindowResize, false);
 
@@ -161,6 +157,7 @@ function init() {
 	document.addEventListener('touchstart', onDocumentTouchStart, false);
 	document.addEventListener('touchend', onDocumentTouchEnd, false);
     document.addEventListener('touchmove', onDocumentTouchMove, false);
+
     ///////////////////////////////////////////////////////////////////////////
     keyboard_set = new THREE.Object3D(); // the complete set
     scene.add(keyboard_set);
@@ -244,8 +241,7 @@ function onDocumentTouchStart(event) {
 
 		mouse.x = ( touches[i].pageX / window.innerWidth ) * 2 - 1;
 		mouse.y = - ( touches[i].pageY / window.innerHeight ) * 2 + 1;
-		var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
-		raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+		raycaster.setFromCamera( mouse, camera );	
 		var intersects = raycaster.intersectObjects( pickables );
 		if (intersects.length > 0) {
 			thiskey = FindKey (intersects[0].object.name);
@@ -266,8 +262,7 @@ function onDocumentTouchMove(event) {
 
 		mouse.x = ( touches[i].pageX / window.innerWidth ) * 2 - 1;
 		mouse.y = - ( touches[i].pageY / window.innerHeight ) * 2 + 1;
-		var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
-		raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+		raycaster.setFromCamera( mouse, camera );	
 		var intersects = raycaster.intersectObjects( pickables );
 		if (intersects.length > 0) {
 			thiskey = FindKey (intersects[0].object.name);
@@ -309,28 +304,22 @@ function onDocumentTouchEnd(event) {
 }
 
 function onWindowResize() {
+
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+
 }
 
 function onDocumentMouseDown(event) {
 
-    // PICKING DETAILS: 
-    // convert mouse.xy = [-1,1]^2 (NDC)
-    // unproject (mouse.xy, 1) to a point on the far plane (in world coordinate)
-    // set raycaster (origin, direction)
-    // find intersection objects, (closest first) 
-    // each record as
-    // [ { distance, point, face, faceIndex, object }, ... ]
-
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    // find intersections
-    var vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera);
-    raycaster.set(camera.position, vector.sub(camera.position).normalize());
+
+	raycaster.setFromCamera( mouse, camera );	
     var intersects = raycaster.intersectObjects(pickables);
+
     if (intersects.length > 0) {
         thiskey = FindKey (intersects[0].object.name);
         thiskey.obj3d.rotation.x = 0.1;
@@ -344,12 +333,12 @@ function onDocumentMouseDown(event) {
 // for showing different cursor; 
 // no other function
 function onDocumentMouseMove(event) {
+
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     
-    var vector = new THREE.Vector3(mouse.x, mouse.y, 1).unproject(camera);
-    raycaster.set(camera.position, vector.sub(camera.position).normalize());
+	raycaster.setFromCamera( mouse, camera );	
     var intersects = raycaster.intersectObjects(pickables);
 
     if (intersects.length > 0) {
@@ -368,7 +357,6 @@ function onDocumentMouseUp(event) {
 
 
 function animate() {
-//controls.update();
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
 }
