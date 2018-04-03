@@ -21,7 +21,7 @@
     <button id="clear" style="width:100%; margin: 10px">Clear</button> 
 </div>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
 
 <script src="lineUtil.js"></script>
 
@@ -53,8 +53,7 @@ function init() {
 	camera.position.z = 50;
 	camera.lookAt (new THREE.Vector3(0,0,0));
 
-	var gridXZ = new THREE.GridHelper(10, 1);
-	gridXZ.setColors( new THREE.Color(0xff0000), new THREE.Color(0x999999) );
+	var gridXZ = new THREE.GridHelper(20, 1, 'red', 'white');
 	gridXZ.rotation.x = Math.PI/2;
 	scene.add(gridXZ);
 	
@@ -91,8 +90,9 @@ function onWindowResize() {
 
 /////////////////////////////////////////////////////////////////////////
 function onDocumentTouchStart (ev) {
-console.log ("in touchstart");
-var event = ev.originalEvent;  // for jQuery codes
+	
+	console.log ("in touchstart");
+	var event = ev.originalEvent;  // for jQuery codes
 	var touches = event.touches;
 	console.log (touches.length + " touches");
 	if (myLine) {
@@ -121,9 +121,9 @@ var event = ev.originalEvent;
 }
 
 function onDocumentTouchMove( ev ) {
-console.log ("in touchmove");
-//	console.log (event.touches.length + " touches");
-var event = ev.originalEvent;  // for jQuery
+	console.log ("in touchmove");
+	//	console.log (event.touches.length + " touches");
+	var event = ev.originalEvent;  // for jQuery
 	if (mouseDown) {
 		event.preventDefault();
 		console.log ("in TouchMove");
@@ -227,15 +227,13 @@ $("#save").on ("touchend", function(event) {
 	event.stopPropagation();
 });
 */
-function animate()
-{
+function animate() {
 	requestAnimationFrame ( animate );  
 	render(); 
 }
 
 
-function render()
-{
+function render() {
 	console.log ("Scene has: " + scene.children.length);
 	
 	renderer.render (scene, camera);

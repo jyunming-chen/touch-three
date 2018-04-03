@@ -24,7 +24,7 @@
 <body> 
 <div id='info'> Device Orientation </div>
 <div id='deviceInfo'></div>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r78/three.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
 <script>
 // new contact problem:
 // static XZ plane
@@ -144,8 +144,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x888888);
 
-    var gridXZ = new THREE.GridHelper(100, 10);
-    gridXZ.setColors(new THREE.Color(0xff0000), new THREE.Color(0xffffff));
+    var gridXZ = new THREE.GridHelper(200, 10, 'red', 'white');
     scene.add(gridXZ);
 
     document.body.appendChild(renderer.domElement);

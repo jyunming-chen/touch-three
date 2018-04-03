@@ -236,7 +236,7 @@ function onDocumentTouchStart(event) {
 	event.preventDefault(); // what is this?
 	
 	var touches = event.changedTouches;
-	for (var i = 0; i < touches.length; i++) {0
+	for (var i = 0; i < touches.length; i++) {
 		console.log ('start: ' + touches[i].identifier + ': ' + touches[i].pageX + ', ' + touches[i].pageY);
 
 		mouse.x = ( touches[i].pageX / window.innerWidth ) * 2 - 1;
