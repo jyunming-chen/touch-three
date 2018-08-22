@@ -26,10 +26,12 @@
 <div id="info">
 XZ Tracer 
 <br> Move with mouse
-<br> OR with Touch (Point, Move)
+<br> OR with Touch (Point, Move)<br>
+<p id='iOSdevice'></p>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 
 <script>
 
@@ -38,11 +40,13 @@ var plane, cyl;
 var mouse = new THREE.Vector2();
 var raycaster = new THREE.Raycaster();
 
+
+
 init();
 animate();
 
 function init() {
-
+	
 	var width = window.innerWidth;
 	var height = window.innerHeight;
 	
@@ -87,12 +91,22 @@ function init() {
 	
 	window.addEventListener ('resize', onWindowResize, false);	
     
-	// mousemove
-	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    
+	// https://stackoverflow.com/questions/9038625/detect-if-device-is-ios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+	var _iOSDevice = !!navigator.platform.match(/iPhone|iPod|iPad/);
 
-	// for those with touch screen
-    document.addEventListener('touchstart', onDocumentTouchStart, false);
-    document.addEventListener('touchmove', onDocumentTouchStart, false);  // same callback
+	if (_iOSDevice) {
+		$('#iOSdevice').text ('use iPhone/iPad')
+
+		// for those with touch screen
+    	document.addEventListener('touchstart', onDocumentTouchStart, false);
+    	document.addEventListener('touchmove', onDocumentTouchStart, false);  // same callback
+    } else {
+    	$('#iOSdevice').text ('regular')
+
+		// mousemove
+		document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    }
 }
 
 function onWindowResize()
