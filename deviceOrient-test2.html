@@ -114,15 +114,19 @@ function ProjVonU(v, u) { // v & u unchanged!
 }
 
 function Contact(ball, plane) {
-    // plane is immobile
 
     // position correction
     ball.pos.setY(0);
     
+    /*
     // contact force
     ball.force.copy(gravity); // gravity
-    var normalW = new THREE.Vector3(0, 1, 0);
+    let normalW = new THREE.Vector3(0, 1, 0); // local plane normal
+    
     ball.force.add(ProjVonU(ball.force, normalW).multiplyScalar(-1)); // contact force
+	*/
+	
+	ball.force.copy (gravity.projectOnPlane (normalW));
 }
 
 function init() {
@@ -185,7 +189,7 @@ function animate() {
 
     // euler: in radian
     // gamma/beta: in degree
-	var a = new THREE.Euler(-beta*Math.PI/180, 0, gamma*Math.PI/180, 'XYZ');
+	var a = new THREE.Euler(-beta*Math.PI/180, 0, -gamma*Math.PI/180, 'XYZ');
     gravity = new THREE.Vector3(0, -80, 0);
     gravity.applyEuler(a);
 
