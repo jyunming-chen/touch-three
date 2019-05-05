@@ -129,6 +129,9 @@ function Contact(ball, plane) {
 }
 
 function init() {
+
+	// assume the plane is XZ plane
+	// with normal = (0,1,0)
     scene = new THREE.Scene();
 
     camera = new THREE.OrthographicCamera(-110, 110, 110, -110, 10, 2000);
@@ -149,10 +152,11 @@ function init() {
 
     var gridXZ = new THREE.GridHelper(200, 10, 'red', 'white');
     scene.add(gridXZ);
+    scene.add (new THREE.AxisHelper (30))
 
     document.body.appendChild(renderer.domElement);
     window.addEventListener('resize', onWindowResize, false);
-    document.addEventListener('mousemove', onDocumentMouseMove, false);
+//    document.addEventListener('mousemove', onDocumentMouseMove, false);
     deviceInfo = document.getElementById('deviceInfo');
 
 	window.addEventListener('deviceorientation', function(e) {
@@ -163,6 +167,7 @@ function init() {
 	
 }
 
+/*
 function onDocumentMouseMove(event) {
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1; // [-1,1]
@@ -175,6 +180,7 @@ function onDocumentMouseMove(event) {
 	//console.log (gamma + ', ' + beta);
     // mouse.x is gamma (rotation about Y)
 }
+*/
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -188,11 +194,15 @@ function animate() {
 
     // euler: in radian
     // gamma/beta: in degree
-	var a = new THREE.Euler(-beta*Math.PI/180, 0, -gamma*Math.PI/180, 'XYZ');
+    // device beta (DeviceX) correspond to world X
+    // device gamma (DeviceY) correspond to world -Z
+	var a = new THREE.Euler(-beta*Math.PI/180, 0, gamma*Math.PI/180, 'XYZ');
     gravity = new THREE.Vector3(0, -80, 0);
     gravity.applyEuler(a);
 
-    var dt = clock.getDelta();
+	//deviceInfo.innerHTML = gravity.x + ',' + gravity.y + ','  + gravity.z;
+	 
+	var dt = clock.getDelta();
     Contact(ball, plane);
     ball.update(dt);
 
