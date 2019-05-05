@@ -116,12 +116,11 @@ function ProjVonU(v, u) { // v & u unchanged!
 function Contact(ball, plane) {
 
     // position correction
-    ball.pos.setY(0);
-    
+    ball.pos.setY(0);    
+    let normalW = new THREE.Vector3(0, 1, 0); // local plane normal
     /*
     // contact force
     ball.force.copy(gravity); // gravity
-    let normalW = new THREE.Vector3(0, 1, 0); // local plane normal
     
     ball.force.add(ProjVonU(ball.force, normalW).multiplyScalar(-1)); // contact force
 	*/
