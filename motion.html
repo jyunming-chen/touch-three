@@ -1,0 +1,28 @@
+<p id='iOSdevice'></p>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script>
+init();
+animate();
+
+function init(){
+	// https://stackoverflow.com/questions/9038625/detect-if-device-is-ios?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
+	var _iOSDevice = !!navigator.platform.match(/iPhone|iPod|iPad/);
+
+	if (_iOSDevice) {
+		$('#iOSdevice').text ('use iPhone/iPad')
+
+   		document.addEventListener('devicemotion', function(event) {
+  		   console.log(event.acceleration.x + ' m/s2');
+   		});
+    } else {
+    	$('#iOSdevice').text ('regular')
+    }
+
+}
+
+function animate(){
+   requestAnimationFrame (animate);
+   //console.log ('in animate');
+}
+
+</script>
