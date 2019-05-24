@@ -12,8 +12,8 @@ function init(){
 	if (_iOSDevice) {
 		$('#iOSdevice').text ('use iPhone/iPad')
 
-   		document.addEventListener('devicemotion', function(event) {
-   		   $('#log').text ( event.acceleration.x + ' m/s2');
+   		window.addEventListener('devicemotion', function(event) {
+   		   $('#log').text ( event.acceleration.x.toPrecision(4) + ' m/s2');
   		   //console.log(event.acceleration.x + ' m/s2');
    		});
     } else {
