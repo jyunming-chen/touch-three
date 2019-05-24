@@ -186,7 +186,7 @@ function animate() {
     // device beta (DeviceX) correspond to world X
     // device gamma (DeviceY) correspond to world -Z
 	var a = new THREE.Euler(-beta*Math.PI/180, 0, gamma*Math.PI/180, 'XYZ');
-    gravity = new THREE.Vector3(0, -80, 0);
+    gravity = new THREE.Vector3(0, -180, 0);
     gravity.applyEuler(a);
 	 
     Contact(ball, plane);
