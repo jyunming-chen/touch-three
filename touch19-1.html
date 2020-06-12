@@ -30,7 +30,7 @@ XZ Tracer
 <p id='iOSdevice'></p>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/107/three.min.js"></script>
 <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
 
 <script>
@@ -39,8 +39,6 @@ var scene, renderer, camera;
 var plane, cyl;
 var mouse = new THREE.Vector2();
 var raycaster = new THREE.Raycaster();
-
-
 
 init();
 animate();
@@ -109,8 +107,7 @@ function init() {
     }
 }
 
-function onWindowResize()
-{
+function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize (window.innerWidth, window.innerHeight);
