@@ -24,7 +24,8 @@
 <body> 
 <div id='info'> Device Orientation </div>
 <div id='deviceInfo'></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://threejs.org/build/three.min.js"></script>
+
 <script>
 // new contact problem:
 // static XZ plane
@@ -133,11 +134,10 @@ function init() {
 
     var gridXZ = new THREE.GridHelper(200, 10, 'red', 'white');
     scene.add(gridXZ);
-    scene.add (new THREE.AxisHelper (30))
+    //scene.add (new THREE.AxisHelper (30))
 
     document.body.appendChild(renderer.domElement);
     window.addEventListener('resize', onWindowResize, false);
-//    document.addEventListener('mousemove', onDocumentMouseMove, false);
     deviceInfo = document.getElementById('deviceInfo');
 
 	window.addEventListener('deviceorientation', function(e) {
