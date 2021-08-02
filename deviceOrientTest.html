@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+	#info {
+		position: absolute;
+		top: 100px; width: 100%;
+		color: #ffff00;
+		text-align: center;
+	}
+	#deviceInfo {
+		position: absolute;
+		bottom: 100px; width: 100%;
+		color: #ffffff;
+		text-align: center;
+	}
+
+</style>
+</head>
+
+<body> 
+<div id='info'> Device Orientation </div>
+<div id='deviceInfo'></div>
+
+<script>
+var deviceInfoDiv;
+var gamma, beta;
+
+init();
+animate();
+
+
+function init() {
+    deviceInfoDiv = document.getElementById('deviceInfo');
+
+	window.addEventListener('deviceorientation', function(e) {
+		gamma = e.gamma;
+		beta = e.beta;
+		console.log (gamma +', ' + beta + ', ' + e.alpha);
+	});
+	
+}
+
+function animate() {
+
+    deviceInfoDiv.innerHTML = ` [gamma: ${gamma}.toFixed(2)] [beta: ${beta}.toFixed(2)]`;
+
+    requestAnimationFrame(animate);
+}
+</script>
+</body>
+
+</html>
